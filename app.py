@@ -1,20 +1,37 @@
 import os
+from lib.database_connection import get_flask_database_connection
+from lib.album_repository import AlbumRepository
 from flask import Flask, request
+from lib.album import Album
 
 # Create a new Flask app
 app = Flask(__name__)
 
 # == Your Routes Here ==
+@app.route('/albums', methods=['POST'])
+def post_albums():
+    if 'title' not in request.form or 'release_year' not in request.form or 'artist_id' not in request.form:
+        return 'No album details supplied' , 400
+    connection = get_flask_database_connection(app)
+    repository = AlbumRepository(connection)
+    album = Album(
+        None,
+        request.form['title'],
+        request.form['release_year'],
+        request.form['artist_id']
+    )
+    repository.create(album)
+    return '', 200
 
-# == Example Code Below ==
+@app.route('/albums', methods=['GET'])
+def get_albums():
+    connection = get_flask_database_connection(app)
+    repository = AlbumRepository(connection)
+    albums = repository.all()
+    return ",".join(f"{album}" for album in albums)
 
-# GET /emoji
-# Returns a emojiy face
-# Try it:
-#   ; curl http://localhost:5000/emoji
-@app.route('/emoji', methods=['GET'])
-def get_emoji():
-    return ":)"
+   
+
 
 # This imports some more example routes for you to see how they work
 # You can delete these lines if you don't need them.
